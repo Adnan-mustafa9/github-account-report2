@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير حساب GitHub</title>
+  <!-- تضمين jQuery من CDN لاستخدام بعض التأثيرات -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* تنسيق الحاوية */
+    .github-container {
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 15px;
+        background: #f7f7f7;
+        border: 1px solid #e1e1e1;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        font-family: 'Arial', sans-serif;
+    }
+    /* تنسيق النموذج */
+    .github-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    .github-form label {
+        font-weight: bold;
+        color: #333;
+    }
+    .github-form input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+    }
+    .github-submit-btn {
+        padding: 10px 20px;
+        background-color: #0073aa;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .github-submit-btn:hover {
+        background-color: #005177;
+    }
+    /* تنسيق البطاقة */
+    .github-card {
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        animation: fadeIn 0.5s ease;
+        position: relative;
+        margin-top: 20px;
+    }
+    .github-card-header {
+        background: #0073aa;
+        color: #fff;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .github-card-header h2 {
+        margin: 0;
+        font-size: 1.4em;
+    }
+    .github-card-header h2 span {
+        font-size: 0.8em;
+        color: #e0e0e0;
+    }
+    /* زر الإغلاق */
+    .github-clear-btn {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1.6em;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    .github-clear-btn:hover {
+        color: #ffdddd;
+    }
+    .github-card-body {
+        padding: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .github-avatar {
+        flex: 0 0 120px;
+        text-align: center;
+    }
+    .github-avatar img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid #0073aa;
+    }
+    .github-info {
+        flex: 1 1 250px;
+    }
+    .github-info p {
+        margin: 5px 0;
+        color: #444;
+        font-size: 0.95em;
+    }
+    .github-info a {
+        color: #0073aa;
+        text-decoration: none;
+    }
+    .github-info a:hover {
+        text-decoration: underline;
+    }
+    .github-stats {
+        flex: 1 1 100%;
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .github-stats p {
+        margin: 0;
+        flex: 1 1 45%;
+        font-weight: bold;
+        color: #333;
+    }
+    /* تأثير الظهور التدريجي */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="github-container">
+    <!-- نموذج الإدخال -->
+    <form id="github-form" class="github-form">
+      <label for="github_username">أدخل اسم مستخدم GitHub:</label>
+      <input type="text" id="github_username" name="github_username" placeholder="مثال: octocat" required>
+      <button type="submit" class="github-submit-btn">عرض التقرير</button>
+    </form>
+    <!-- منطقة عرض التقرير -->
+    <div id="report-area"></div>
+  </div>
+  
+  <script>
+    // تعريف الرمز الشخصي للوصول إلى GitHub (يُرجى تغيير القيمة إلى الرمز الخاص بك)
+    const GITHUB_ACCESS_TOKEN = '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';
+    
+    // التعامل مع حدث إرسال النموذج
+    document.getElementById('github-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('github_username').value.trim();
+      if(username === '') return;
+      getUserData(username);
+    });
+    
+    // دالة لجلب بيانات المستخدم وبناء التقرير
+    async function getUserData(username) {
+      const reportArea = document.getElementById('report-area');
+      reportArea.innerHTML = ''; // مسح المحتوى السابق
+      
+      try {
+        // جلب البيانات الأساسية للمستخدم
+        const userResponse = await fetch(`https://api.github.com/users/${username}`, {
+          headers: {
+            'Authorization': 'token ' + GITHUB_ACCESS_TOKEN,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (!userResponse.ok) {
+          if(userResponse.status === 404) {
+            reportArea.innerHTML = '<p>المستخدم غير موجود.</p>';
+            return;
+          }
+          reportArea.innerHTML = '<p>حدث خطأ أثناء جلب بيانات المستخدم. الرجاء المحاولة لاحقاً.</p>';
+          return;
+        }
+        
+        const userData = await userResponse.json();
+        const avatar_url   = userData.avatar_url || '';
+        const name         = userData.name ? userData.name : userData.login;
+        const bio          = userData.bio || 'لا يوجد تعريف.';
+        const location     = userData.location || 'غير محدد';
+        const blog         = userData.blog || '';
+        const followers    = userData.followers || 0;
+        const following    = userData.following || 0;
+        const public_repos = userData.public_repos || 0;
+        
+        // جلب بيانات المستودعات وحساب إجمالي النجوم
+        const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`, {
+          headers: {
+            'Authorization': 'token ' + GITHUB_ACCESS_TOKEN,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        let stars_count = 0;
+        if (reposResponse.ok) {
+          const reposData = await reposResponse.json();
+          if (Array.isArray(reposData)) {
+            reposData.forEach(repo => {
+              stars_count += repo.stargazers_count || 0;
+            });
+          }
+        }
+        
+        // بناء بطاقة التقرير
+        let output = '';
+        output += '<div class="github-card">';
+        output += '  <div class="github-card-header">';
+        output += '    <h2>' + name + ' <span>(' + username + ')</span></h2>';
+        output += '    <button type="button" class="github-clear-btn" title="مسح التقرير">&times;</button>';
+        output += '  </div>';
+        output += '  <div class="github-card-body">';
+        if(avatar_url) {
+          output += '    <div class="github-avatar"><img src="' + avatar_url + '" alt="صورة ' + username + '"></div>';
+        }
+        output += '    <div class="github-info">';
+        output += '      <p><strong>التعريف:</strong> ' + bio + '</p>';
+        output += '      <p><strong>الموقع:</strong> ' + location + '</p>';
+        if(blog) {
+          output += '      <p><strong>الموقع الإلكتروني:</strong> <a href="' + blog + '" target="_blank">' + blog + '</a></p>';
+        }
+        output += '    </div>';
+        output += '    <div class="github-stats">';
+        output += '      <p><strong>المتابعين:</strong> ' + followers + '</p>';
+        output += '      <p><strong>المتابَعون:</strong> ' + following + '</p>';
+        output += '      <p><strong>المستودعات:</strong> ' + public_repos + '</p>';
+        output += '      <p><strong>إجمالي النجوم:</strong> &#9733; ' + stars_count + '</p>';
+        output += '    </div>';
+        output += '  </div>';
+        output += '</div>';
+        
+        reportArea.innerHTML = output;
+        
+      } catch (error) {
+        reportArea.innerHTML = '<p>حدث خطأ أثناء جلب البيانات. الرجاء المحاولة لاحقاً.</p>';
+        console.error(error);
+      }
+    }
+    
+    // استخدام jQuery لتفعيل زر المسح (الإغلاق)
+    jQuery(document).ready(function($) {
+      $('.github-container').on('click', '.github-clear-btn', function() {
+        $(this).closest('.github-card').slideUp(300, function() {
+          $(this).remove();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
